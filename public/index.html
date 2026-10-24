@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart IV Fluid Monitoring System | Dual-Bottle Telemetry & Auto Shut-Off</title>
+  <meta name="description" content="ESP32-based Smart IV Fluid Monitoring System featuring real-time dual-bottle weight telemetry, automatic solenoid valve shut-off, USB serial, and Wi-Fi connectivity.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- System Alert Banner (Dynamic) -->
+  <div id="system-alert-banner" class="alert-banner hidden" role="alert">
+    <div class="alert-icon" id="alert-banner-icon">⚠️</div>
+    <div class="alert-content">
+      <span class="alert-title" id="alert-banner-title">SYSTEM NOTICE</span>
+      <span class="alert-desc" id="alert-banner-desc">Waiting for ESP32 telemetry data</span>
+    </div>
+    <button class="alert-close" id="btn-alert-dismiss" aria-label="Dismiss Alert">&times;</button>
+  </div>
+
+  <!-- Navigation Bar -->
+  <header class="app-navbar">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <div class="brand-logo" aria-hidden="true">
+          <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="rgba(14, 165, 233, 0.25)" stroke="#0ea5e9"/>
+            <path d="M9 13a3 3 0 0 0 6 0" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Smart IV Fluid Monitoring</h1>
+          <span class="brand-subtitle">Dual-Bottle Telemetry &amp; Automatic Shut-Off System</span>
+        </div>
+      </div>
+
+      <div class="nav-telemetry-status">
+        <div class="status-pill" id="navbar-transport-pill">
+          <span class="status-dot disconnected" id="navbar-status-dot"></span>
+          <span class="transport-label" id="navbar-transport-text">DISCONNECTED</span>
+          <span class="status-divider">|</span>
+          <span class="system-health" id="navbar-health-text">IDLE</span>
+        </div>
+
+        <button class="btn-secondary nav-action-btn" id="btn-open-settings" title="Open Monitoring Settings">
+          <svg class="nav-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          Settings
+        </button>
+
+        <button class="btn-secondary nav-action-btn" id="btn-toggle-sound" title="Toggle Clinical Alert Audio Beep">
+          <span id="sound-icon">🔔</span>
+          <span id="sound-text">Alarm Sound: ON</span>
+        </button>
+
+        <button class="btn-primary-outline nav-action-btn" id="btn-unlatch-all" title="Open and Unlatch Both Solenoid Valves">
+          <svg class="nav-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Open / Reset Valves
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+    
+    <!-- 1. SUMMARY CARDS ROW -->
+    <section class="summary-cards-section" aria-label="System Summary Overview">
+      <div class="summary-grid">
+        <!-- Card 1: Total Initial Capacity -->
+        <div class="card summary-card" id="summary-card-capacity">
+          <div class="summary-card-header">
+            <span class="summary-card-label">TOTAL INITIAL CAPACITY</span>
+            <div class="summary-icon blue-icon">📦</div>
+          </div>
+          <div class="summary-card-value" id="summary-capacity-value">1000 <span class="summary-unit">mL</span></div>
+          <div class="summary-card-footer">Dual 500 mL IV Standard Containers</div>
+        </div>
+
+        <!-- Card 2: Total Estimated Remaining Fluid -->
+        <div class="card summary-card" id="summary-card-remaining">
+          <div class="summary-card-header">
+            <span class="summary-card-label">TOTAL REMAINING FLUID</span>
+            <div class="summary-icon teal-icon">💧</div>
+          </div>
+          <div class="summary-card-value" id="summary-remaining-value">-- <span class="summary-unit">mL</span></div>
+          <div class="summary-card-footer" id="summary-remaining-footer">Awaiting ESP32 Telemetry</div>
+        </div>
+
+        <!-- Card 3: Bottles Requiring Attention -->
+        <div class="card summary-card" id="summary-card-attention">
+          <div class="summary-card-header">
+            <span class="summary-card-label">ATTENTION REQUIRED</span>
+            <div class="summary-icon amber-icon" id="attention-icon">⚠️</div>
+          </div>
+          <div class="summary-card-value" id="summary-attention-value">0 <span class="summary-unit">Bottles</span></div>
+          <div class="summary-card-footer" id="summary-attention-footer">Normal Infusion Conditions</div>
+        </div>
+
+        <!-- Card 4: ESP32 Connection Status -->
+        <div class="card summary-card" id="summary-card-connection">
+          <div class="summary-card-header">
+            <span class="summary-card-label">ESP32 CONNECTION</span>
+            <div class="summary-icon gray-icon" id="connection-card-icon">🔌</div>
+          </div>
+          <div class="summary-card-value" id="summary-connection-value">DISCONNECTED</div>
+          <div class="summary-card-footer" id="summary-connection-footer">Select USB Serial or Wi-Fi</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Fluid Shut-Off Threshold & Emergency Stop Bar -->
+    <section class="threshold-control-bar card" aria-label="Quick Fluid Shut-Off Control">
+      <div class="threshold-bar-content">
+        <div class="threshold-title-group">
+          <span class="threshold-badge">AUTOMATIC FLUID SHUT-OFF CONTROL</span>
+          <div class="threshold-heading-row">
+            <h3 class="threshold-heading">Stop Fluid Flow At:</h3>
+            <span class="threshold-current-target" id="threshold-display-target">Currently set to <strong>20 mL</strong></span>
+          </div>
+          <p class="threshold-desc">When remaining fluid drops to this volume, the ESP32 automatically shuts off the solenoid valve and turns the screen RED.</p>
+        </div>
+
+        <div class="threshold-controls-wrap">
+          <div class="threshold-stepper-box">
+            <button class="btn-step" id="btn-thresh-dec" title="Decrease threshold by 5 mL">&minus; 5</button>
+            <div class="threshold-input-wrapper">
+              <input type="number" id="quick-threshold-input" class="threshold-number-input" value="20" min="5" max="250" step="1">
+              <span class="threshold-unit-label">mL</span>
+            </div>
+            <button class="btn-step" id="btn-thresh-inc" title="Increase threshold by 5 mL">+ 5</button>
+            <button class="btn-primary" id="btn-apply-threshold" title="Send threshold to ESP32">Set Stop Level</button>
+          </div>
+
+          <div class="threshold-presets-group">
+            <span class="presets-caption">Quick Presets:</span>
+            <button class="btn-preset-chip" data-val="10">10 mL</button>
+            <button class="btn-preset-chip active" data-val="20">20 mL (Standard)</button>
+            <button class="btn-preset-chip" data-val="30">30 mL</button>
+            <button class="btn-preset-chip" data-val="50">50 mL</button>
+          </div>
+        </div>
+
+        <div class="emergency-stop-container">
+          <button class="btn-success-open" id="btn-open-all" title="Command both solenoid valves to OPEN and start fluid flow">
+            ▶ Open Both Valves
+          </button>
+          <button class="btn-danger-emergency" id="btn-emergency-stop-all" title="Immediately shut off both solenoid valves">
+            🛑 Emergency Stop (Close Both)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Disconnected Stale Notice Bar -->
+    <div id="stale-data-notice" class="stale-notice-bar hidden">
+      <span class="stale-badge">DEVICE DISCONNECTED</span>
+      <span class="stale-message">Waiting for ESP32 data. Displayed measurements reflect last recorded state.</span>
+    </div>
+
+    <!-- 2. TWO IV BOTTLE CARDS AT THE CORNERS (LEFT & RIGHT) -->
+    <section class="bottle-cards-section" aria-label="Dual Bottle Independent Monitoring">
+      <div class="bottle-cards-container">
+        
+        <!-- LEFT CARD — IV BOTTLE 1 -->
+        <div class="card bottle-card" id="bottle-card-1">
+          <div class="bottle-card-header">
+            <div class="bottle-title-group">
+              <span class="bottle-tag">CHANNEL 1</span>
+              <h2 class="bottle-name">IV Bottle 1</h2>
+              <span class="bottle-nominal-cap">Initial Capacity: 500 mL</span>
+            </div>
+            <div class="bottle-badge-group">
+              <span class="status-badge badge-disconnected" id="b1-status-badge">DISCONNECTED</span>
+            </div>
+          </div>
+
+          <!-- Low Fluid Warning Banner -->
+          <div class="bottle-warning-banner hidden" id="b1-warning-banner">
+            <span class="warning-icon">🚨</span>
+            <span class="warning-text">CRITICAL: Remaining volume &le; 20 mL! Valve commanded CLOSED.</span>
+          </div>
+
+          <div class="bottle-card-body">
+            <!-- Left Sub-column: Fluid Visual Gauge -->
+            <div class="bottle-visual-col">
+              <div class="iv-container-graphic">
+                <div class="iv-hanger-loop"></div>
+                <div class="iv-bottle-hull">
+                  <div class="iv-graduations">
+                    <span class="grad-mark">500</span>
+                    <span class="grad-mark">400</span>
+                    <span class="grad-mark">300</span>
+                    <span class="grad-mark">200</span>
+                    <span class="grad-mark">100</span>
+                    <span class="grad-mark">20</span>
+                  </div>
+                  <div class="iv-fluid-fill" id="b1-fluid-fill" style="height: 0%;">
+                    <div class="fluid-wave"></div>
+                  </div>
+                  <div class="iv-threshold-line" title="Configured Low-Fluid Threshold (20 mL)">
+                    <span class="threshold-label">20 mL</span>
+                  </div>
+                </div>
+                <div class="iv-spout">
+                  <div class="drip-chamber">
+                    <div class="drip-drop" id="b1-drip-drop"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Sub-column: Numerical Readouts & Status -->
+            <div class="bottle-metrics-col">
+              <div class="metric-block remaining-metric">
+                <span class="metric-caption">ESTIMATED REMAINING FLUID</span>
+                <div class="large-volume-readout">
+                  <span class="vol-number" id="b1-volume-text">--</span>
+                  <span class="vol-unit">mL</span>
+                </div>
+                <!-- Fluid level progress bar -->
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill" id="b1-progress-bar" style="width: 0%;"></div>
+                </div>
+                <div class="progress-subtext">
+                  <span>Fluid Level:</span>
+                  <strong id="b1-percentage-text">--%</strong>
+                </div>
+              </div>
+
+              <div class="metrics-subgrid">
+                <div class="submetric-item">
+                  <span class="submetric-label">Fluid Mass</span>
+                  <span class="submetric-val" id="b1-fluid-grams">-- g</span>
+                </div>
+                <div class="submetric-item">
+                  <span class="submetric-label">Gross Load Cell</span>
+                  <span class="submetric-val" id="b1-weight-text">-- g</span>
+                </div>
+                <div class="submetric-item">
+                  <span class="submetric-label">Sensor Status</span>
+                  <span class="submetric-val status-val" id="b1-sensor-status">--</span>
+                </div>
+                <div class="submetric-item">
+                  <span class="submetric-label">Valve Command</span>
+                  <span class="submetric-val valve-val" id="b1-valve-command">--</span>
+                </div>
+              </div>
+
+              <!-- Valve Control Status & Reset Action -->
+              <div class="valve-status-box" id="b1-valve-box">
+                <div class="valve-icon-state" id="b1-valve-indicator">⚪</div>
+                <div class="valve-state-desc">
+                  <span class="valve-state-title" id="b1-valve-title">Valve State: Unknown</span>
+                  <span class="valve-state-sub" id="b1-valve-desc">Solenoid Relay Channel 1</span>
+                </div>
+                <div class="valve-actions-btn-group">
+                  <button class="btn-micro btn-success-micro" id="btn-open-b1" title="Command Solenoid Valve 1 to OPEN">▶ Open Valve</button>
+                  <button class="btn-micro btn-danger-micro" id="btn-stop-b1" title="Instantly command Solenoid Valve 1 to CLOSE">⏹ Stop Flow</button>
+                  <button class="btn-micro btn-secondary-micro" id="btn-quick-tare-b1" title="Tare/Zero load cell for Bottle 1">⚖️ Tare</button>
+                </div>
+              </div>
+
+              <div class="bottle-footer-time">
+                <span>Last Updated: </span>
+                <span id="b1-updated-time">Never</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT CARD — IV BOTTLE 2 -->
+        <div class="card bottle-card" id="bottle-card-2">
+          <div class="bottle-card-header">
+            <div class="bottle-title-group">
+              <span class="bottle-tag">CHANNEL 2</span>
+              <h2 class="bottle-name">IV Bottle 2</h2>
+              <span class="bottle-nominal-cap">Initial Capacity: 500 mL</span>
+            </div>
+            <div class="bottle-badge-group">
+              <span class="status-badge badge-disconnected" id="b2-status-badge">DISCONNECTED</span>
+            </div>
+          </div>
+
+          <!-- Low Fluid Warning Banner -->
+          <div class="bottle-warning-banner hidden" id="b2-warning-banner">
+            <span class="warning-icon">🚨</span>
+            <span class="warning-text">CRITICAL: Remaining volume &le; 20 mL! Valve commanded CLOSED.</span>
+          </div>
+
+          <div class="bottle-card-body">
+            <!-- Left Sub-column: Fluid Visual Gauge -->
+            <div class="bottle-visual-col">
+              <div class="iv-container-graphic">
+                <div class="iv-hanger-loop"></div>
+                <div class="iv-bottle-hull">
+                  <div class="iv-graduations">
+                    <span class="grad-mark">500</span>
+                    <span class="grad-mark">400</span>
+                    <span class="grad-mark">300</span>
+                    <span class="grad-mark">200</span>
+                    <span class="grad-mark">100</span>
+                    <span class="grad-mark">20</span>
+                  </div>
+                  <div class="iv-fluid-fill" id="b2-fluid-fill" style="height: 0%;">
+                    <div class="fluid-wave"></div>
+                  </div>
+                  <div class="iv-threshold-line" title="Configured Low-Fluid Threshold (20 mL)">
+                    <span class="threshold-label">20 mL</span>
+                  </div>
+                </div>
+                <div class="iv-spout">
+                  <div class="drip-chamber">
+                    <div class="drip-drop" id="b2-drip-drop"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Sub-column: Numerical Readouts & Status -->
+            <div class="bottle-metrics-col">
+              <div class="metric-block remaining-metric">
+                <span class="metric-caption">ESTIMATED REMAINING FLUID</span>
+                <div class="large-volume-readout">
+                  <span class="vol-number" id="b2-volume-text">--</span>
+                  <span class="vol-unit">mL</span>
+                </div>
+                <!-- Fluid level progress bar -->
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill" id="b2-progress-bar" style="width: 0%;"></div>
+                </div>
+                <div class="progress-subtext">
+                  <span>Fluid Level:</span>
+                  <strong id="b2-percentage-text">--%</strong>
+                </div>
+              </div>
+
+              <div class="metrics-subgrid">
+                <div class="submetric-item">
+                  <span class="submetric-label">Fluid Mass</span>
+                  <span class="submetric-val" id="b2-fluid-grams">-- g</span>
+                </div>
+                <div class="submetric-item">
+                  <span class="submetric-label">Gross Load Cell</span>
+                  <span class="submetric-val" id="b2-weight-text">-- g</span>
+                </div>
+                <div class="submetric-item">
+                  <span class="submetric-label">Sensor Status</span>
+                  <span class="submetric-val status-val" id="b2-sensor-status">--</span>
+                </div>
+                <div class="submetric-item">
+                  <span class="submetric-label">Valve Command</span>
+                  <span class="submetric-val valve-val" id="b2-valve-command">--</span>
+                </div>
+              </div>
+
+              <!-- Valve Control Status & Reset Action -->
+              <div class="valve-status-box" id="b2-valve-box">
+                <div class="valve-icon-state" id="b2-valve-indicator">⚪</div>
+                <div class="valve-state-desc">
+                  <span class="valve-state-title" id="b2-valve-title">Valve State: Unknown</span>
+                  <span class="valve-state-sub" id="b2-valve-desc">Solenoid Relay Channel 2</span>
+                </div>
+                <div class="valve-actions-btn-group">
+                  <button class="btn-micro btn-success-micro" id="btn-open-b2" title="Command Solenoid Valve 2 to OPEN">▶ Open Valve</button>
+                  <button class="btn-micro btn-danger-micro" id="btn-stop-b2" title="Instantly command Solenoid Valve 2 to CLOSE">⏹ Stop Flow</button>
+                  <button class="btn-micro btn-secondary-micro" id="btn-quick-tare-b2" title="Tare/Zero load cell for Bottle 2">⚖️ Tare</button>
+                </div>
+              </div>
+
+              <div class="bottle-footer-time">
+                <span>Last Updated: </span>
+                <span id="b2-updated-time">Never</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. LIVE MONITORING & CHARTS SECTION -->
+    <section class="live-charts-section" id="live-monitoring-section" aria-label="Live History Charts">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-title">Live Infusion Telemetry &amp; Charts</h2>
+          <p class="section-subtitle">Real-time volume decay tracking over time (In-memory buffer: last 300 readings)</p>
+        </div>
+        <div class="chart-controls">
+          <span class="chart-legend-tag legend-b1"><span class="dot"></span> Bottle 1 (Left)</span>
+          <span class="chart-legend-tag legend-b2"><span class="dot"></span> Bottle 2 (Right)</span>
+          <button class="btn-secondary btn-sm" id="btn-clear-charts" title="Clear current in-memory chart history">Clear Charts</button>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <!-- Chart 1: Bottle 1 Remaining Fluid vs Time -->
+        <div class="card chart-card">
+          <div class="chart-card-header">
+            <h3 class="chart-card-title">Bottle 1: Remaining Fluid vs Time</h3>
+            <span class="chart-badge">CH 1 &bull; 0–500 mL</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-bottle-1" height="240"></canvas>
+            <div class="chart-empty-state" id="chart-1-empty">
+              <span>Waiting for Bottle 1 real sensor data...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart 2: Bottle 2 Remaining Fluid vs Time -->
+        <div class="card chart-card">
+          <div class="chart-card-header">
+            <h3 class="chart-card-title">Bottle 2: Remaining Fluid vs Time</h3>
+            <span class="chart-badge">CH 2 &bull; 0–500 mL</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-bottle-2" height="240"></canvas>
+            <div class="chart-empty-state" id="chart-2-empty">
+              <span>Waiting for Bottle 2 real sensor data...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CONNECTION OPTIONS SECTION (OPTION A & OPTION B) -->
+    <section class="connections-section" id="connection-options-section" aria-label="ESP32 Communication Channels">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-title">ESP32 Connection Configuration</h2>
+          <p class="section-subtitle">Select either USB Serial or Local Wi-Fi IP to receive live sensor telemetry from the ESP32.</p>
+        </div>
+        <div class="connection-badges-wrap">
+          <div class="server-status-pill offline" id="backend-server-pill" title="Status of the local Node.js backend server on port 3000">
+            <span class="status-dot disconnected" id="backend-server-dot"></span>
+            <span>Server: <strong id="backend-server-status-text">Checking...</strong></span>
+          </div>
+          <div class="active-mode-badge" id="active-connection-badge">
+            Active Mode: <strong id="active-mode-name">NONE (DISCONNECTED)</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="connection-cards-grid">
+        
+        <!-- OPTION A: USB SERIAL CONNECTION -->
+        <div class="card connection-card" id="card-serial-connection">
+          <div class="conn-card-header">
+            <div class="conn-title-wrap">
+              <span class="conn-opt-badge">OPTION A</span>
+              <h3 class="conn-title">Connect ESP32 via USB</h3>
+            </div>
+            <span class="conn-status-tag" id="serial-status-tag">DISCONNECTED</span>
+          </div>
+
+          <!-- Quick Detected Device Hint Bar -->
+          <div id="esp32-port-hint" class="port-hint-box hidden">
+            <span class="hint-icon">⚡</span>
+            <span class="hint-text" id="esp32-hint-text">Detected ESP32 on <strong>COM7</strong> (Silicon Labs CP210x)</span>
+            <button class="btn-xs-chip" id="btn-quick-select-esp32" type="button">Select COM7</button>
+          </div>
+
+          <div class="conn-form-grid">
+            <div class="form-group">
+              <div class="form-label-row">
+                <label for="select-com-port" class="form-label">COM Port</label>
+                <button type="button" class="btn-link-action" id="btn-toggle-custom-port" title="Toggle manual port typing">Manual Port</button>
+              </div>
+              <div class="input-with-action">
+                <select id="select-com-port" class="form-select">
+                  <option value="">-- Scanning for COM Ports... --</option>
+                </select>
+                <input type="text" id="input-custom-com-port" class="form-input hidden" placeholder="e.g. COM7">
+                <button class="btn-secondary btn-icon" id="btn-refresh-ports" title="Scan and Refresh Available COM Ports">
+                  🔄
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="select-baud-rate" class="form-label">Baud Rate</label>
+              <select id="select-baud-rate" class="form-select">
+                <option value="115200" selected>115200 (ESP32 Default)</option>
+                <option value="9600">9600</option>
+                <option value="57600">57600</option>
+                <option value="230400">230400</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="conn-actions-row">
+            <button class="btn-primary" id="btn-serial-connect" title="Connect through local Node.js backend server">Connect USB (Node Server)</button>
+            <button class="btn-web-serial" id="btn-web-serial-connect" title="Connect directly in Chrome/Edge using Web Serial API (Zero Node.js required!)">⚡ Direct Browser USB</button>
+            <button class="btn-danger-outline" id="btn-serial-disconnect" disabled>Disconnect</button>
+          </div>
+
+          <!-- Server Offline Notice Banner -->
+          <div id="server-offline-notice" class="server-offline-alert hidden">
+            <span class="alert-mini-icon">ℹ️</span>
+            <span class="alert-mini-text">Node server is offline on port 3000. Start it via <code>npm start</code>, or click <strong>⚡ Direct Browser USB</strong> above to connect directly from Chrome/Edge!</span>
+          </div>
+
+          <!-- USB Serial Communication Log Terminal -->
+          <div class="terminal-box">
+            <div class="terminal-header">
+              <span>USB Serial Communication Log</span>
+              <button class="btn-terminal-clear" id="btn-clear-terminal">Clear</button>
+            </div>
+            <div class="terminal-content" id="serial-terminal-logs">
+              <div class="terminal-line muted">[System Ready] Click "Refresh Ports" to discover connected ESP32 boards.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OPTION B: WI-FI IP ADDRESS CONNECTION -->
+        <div class="card connection-card" id="card-wifi-connection">
+          <div class="conn-card-header">
+            <div class="conn-title-wrap">
+              <span class="conn-opt-badge">OPTION B</span>
+              <h3 class="conn-title">Connect ESP32 via Wi-Fi</h3>
+            </div>
+            <span class="conn-status-tag" id="wifi-status-tag">DISCONNECTED</span>
+          </div>
+
+          <div class="conn-form-grid">
+            <div class="form-group">
+              <label for="input-wifi-ip" class="form-label">ESP32 IP Address</label>
+              <input type="text" id="input-wifi-ip" class="form-input" placeholder="e.g. 192.168.1.100" value="192.168.1.100">
+            </div>
+
+            <div class="form-group">
+              <label for="input-wifi-port" class="form-label">HTTP Port</label>
+              <input type="number" id="input-wifi-port" class="form-input" placeholder="80" value="80" min="1" max="65535">
+            </div>
+          </div>
+
+          <div class="conn-actions-row">
+            <button class="btn-primary" id="btn-wifi-connect">Connect Wi-Fi</button>
+            <button class="btn-danger-outline" id="btn-wifi-disconnect" disabled>Disconnect</button>
+          </div>
+
+          <div class="wifi-info-panel">
+            <div class="info-row">
+              <span class="info-lbl">Target Endpoint:</span>
+              <span class="info-val" id="wifi-endpoint-preview">http://192.168.1.100:80/api/readings</span>
+            </div>
+            <div class="info-row">
+              <span class="info-lbl">Last Packet:</span>
+              <span class="info-val" id="wifi-last-comm-time">Never</span>
+            </div>
+            <div class="info-note">
+              Ensure both this computer and the ESP32 are connected to the same local Wi-Fi router. Enter the actual IP address displayed in the ESP32 Arduino Serial Monitor upon boot.
+            </div>
+          </div>
+
+          <!-- Simulation / Demo Testing Toggle Box (Non-intrusive) -->
+          <div class="sim-toggle-box">
+            <div class="sim-header">
+              <span class="sim-title">Virtual Test Harness (Hardware-Free Demo)</span>
+              <button class="btn-secondary btn-sm" id="btn-toggle-simulation">Start Simulation</button>
+            </div>
+            <p class="sim-desc">Simulates real-time fluid decay and ESP32 valve shut-off at 20 mL without physical sensors connected.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 5. SYSTEM EVENT LOG SECTION -->
+    <section class="event-log-section" aria-label="System Event History">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-title">System Event Audit Log</h2>
+          <p class="section-subtitle">Real-time log of connection events, threshold alarms, and valve commands (In-memory, max 200 items).</p>
+        </div>
+        <div class="event-filter-controls">
+          <button class="filter-chip active" data-filter="ALL">All Events</button>
+          <button class="filter-chip" data-filter="CRITICAL">Critical Alarms</button>
+          <button class="filter-chip" data-filter="WARN">Warnings</button>
+          <button class="filter-chip" data-filter="INFO">Info</button>
+          <button class="btn-secondary btn-sm" id="btn-clear-events">Clear Log</button>
+        </div>
+      </div>
+
+      <div class="card event-log-card">
+        <div class="event-table-container">
+          <table class="event-table">
+            <thead>
+              <tr>
+                <th style="width: 180px;">Timestamp</th>
+                <th style="width: 110px;">Severity</th>
+                <th style="width: 220px;">Event Type</th>
+                <th>Message Details</th>
+              </tr>
+            </thead>
+            <tbody id="event-log-tbody">
+              <tr>
+                <td colspan="4" class="empty-table-cell">No events logged yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Settings Modal -->
+  <div class="modal-backdrop hidden" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-settings-title">System Monitoring Settings</h3>
+        <button class="btn-modal-close" id="btn-close-settings" aria-label="Close Settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-intro">Configure demonstration thresholds and container parameters. Settings are stored in backend server memory.</p>
+        
+        <div class="settings-form-grid">
+          <div class="form-group">
+            <label for="setting-threshold" class="form-label">Low-Fluid Threshold (mL)</label>
+            <input type="number" id="setting-threshold" class="form-input" value="20" min="5" max="100">
+            <small class="field-hint">Triggers warning and valve shut-off command (Default: 20 mL).</small>
+          </div>
+
+          <div class="form-group">
+            <label for="setting-density" class="form-label">Fluid Density (g/mL)</label>
+            <input type="number" id="setting-density" class="form-input" value="1.00" step="0.01" min="0.8" max="1.5">
+            <small class="field-hint">Demo water standard: 1.00 g/mL.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="setting-cap-b1" class="form-label">Bottle 1 Capacity (mL)</label>
+            <input type="number" id="setting-cap-b1" class="form-input" value="500" min="100" max="2000">
+          </div>
+
+          <div class="form-group">
+            <label for="setting-cap-b2" class="form-label">Bottle 2 Capacity (mL)</label>
+            <input type="number" id="setting-cap-b2" class="form-input" value="500" min="100" max="2000">
+          </div>
+
+          <div class="form-group">
+            <label for="setting-tare-b1" class="form-label">Bottle 1 Assembly Tare (g)</label>
+            <input type="number" id="setting-tare-b1" class="form-input" value="30.0" step="0.5">
+            <small class="field-hint">Weight of empty plastic container + spike.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="setting-tare-b2" class="form-label">Bottle 2 Assembly Tare (g)</label>
+            <input type="number" id="setting-tare-b2" class="form-input" value="30.0" step="0.5">
+            <small class="field-hint">Weight of empty plastic container + spike.</small>
+          </div>
+        </div>
+
+        <div class="sensor-tare-actions">
+          <span class="sub-heading">Hardware Zero/Tare Calibration</span>
+          <div class="tare-btn-group">
+            <button class="btn-secondary btn-sm" id="btn-tare-b1">Tare Bottle 1 Load Cell</button>
+            <button class="btn-secondary btn-sm" id="btn-tare-b2">Tare Bottle 2 Load Cell</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-cancel-settings">Cancel</button>
+        <button class="btn-primary" id="btn-save-settings">Save &amp; Transmit to ESP32</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p>Smart IV Fluid Monitoring System &bull; Dual-Bottle Weight Telemetry Prototype</p>
+      <p class="disclaimer">Non-clinical engineering demonstration setup. Not intended for actual patient infusion or life-critical medical administration.</p>
+    </div>
+  </footer>
+
+  <!-- Chart.js local bundle -->
+  <script src="vendor/chart.umd.min.js"></script>
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

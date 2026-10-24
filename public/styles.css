@@ -1,0 +1,1892 @@
+/* ==========================================================================
+   Smart IV Fluid Monitoring System - Modern Healthcare UI Design System
+   ========================================================================== */
+
+:root {
+  /* Brand & Theme Colors */
+  --bg-primary: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --border-color: #e2e8f0;
+  --border-focus: #38bdf8;
+  
+  /* Text Colors */
+  --text-heading: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  
+  /* Medical Status Colors */
+  --color-teal: #0d9488;
+  --color-blue: #0284c7;
+  --color-blue-light: #e0f2fe;
+  --color-normal: #10b981;
+  --color-normal-bg: #ecfdf5;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-critical: #ef4444;
+  --color-critical-bg: #fef2f2;
+  --color-disconnected: #64748b;
+  --color-disconnected-bg: #f1f5f9;
+  
+  /* Valve Indicator Colors */
+  --valve-open-color: #10b981;
+  --valve-closed-color: #ef4444;
+
+  /* Typography & Shadows */
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Base Reset & Box Sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* -------------------------------------------------------------
+   Dynamic System Alert Banner
+   ------------------------------------------------------------- */
+.alert-banner {
+  background-color: var(--color-critical-bg);
+  border-bottom: 2px solid var(--color-critical);
+  color: #991b1b;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+  animation: slideDown 0.3s ease;
+}
+
+.alert-banner.banner-warning {
+  background-color: var(--color-warning-bg);
+  border-bottom-color: var(--color-warning);
+  color: #92400e;
+}
+
+.alert-banner.hidden {
+  display: none !important;
+}
+
+.alert-icon {
+  font-size: 1.25rem;
+}
+
+.alert-content {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.alert-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+}
+
+.alert-desc {
+  font-size: 0.875rem;
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: inherit;
+  cursor: pointer;
+  padding: 4px 8px;
+  opacity: 0.7;
+}
+.alert-close:hover {
+  opacity: 1;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* -------------------------------------------------------------
+   Navigation Bar
+   ------------------------------------------------------------- */
+.app-navbar {
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  padding: 14px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-container {
+  max-width: 1360px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  background-color: var(--color-blue-light);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.drop-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.brand-text h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.brand-subtitle {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.nav-telemetry-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-body);
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: var(--color-disconnected);
+}
+
+.status-dot.connected {
+  background-color: var(--color-normal);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  animation: pulse-dot 1.8s infinite;
+}
+
+.status-dot.connecting {
+  background-color: var(--color-warning);
+  animation: pulse-dot 1s infinite;
+}
+
+.status-dot.disconnected {
+  background-color: var(--color-disconnected);
+}
+
+.status-dot.error {
+  background-color: var(--color-critical);
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.status-divider {
+  color: var(--text-light);
+}
+
+.system-health {
+  color: var(--text-muted);
+}
+
+.nav-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.825rem;
+  padding: 7px 14px;
+}
+
+.nav-btn-icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* -------------------------------------------------------------
+   Buttons & Inputs
+   ------------------------------------------------------------- */
+button {
+  font-family: inherit;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary {
+  background-color: var(--color-blue);
+  color: #ffffff;
+  border: 1px solid transparent;
+  padding: 8px 16px;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: #0369a1;
+}
+
+.btn-primary-outline {
+  background-color: transparent;
+  color: var(--color-blue);
+  border: 1px solid #7dd3fc;
+  padding: 7px 14px;
+}
+.btn-primary-outline:hover:not(:disabled) {
+  background-color: var(--color-blue-light);
+}
+
+.btn-secondary {
+  background-color: var(--bg-surface);
+  color: var(--text-body);
+  border: 1px solid var(--border-color);
+  padding: 8px 14px;
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--bg-subtle);
+  border-color: #cbd5e1;
+}
+
+.btn-danger-outline {
+  background-color: transparent;
+  color: var(--color-critical);
+  border: 1px solid #fca5a5;
+  padding: 8px 16px;
+}
+.btn-danger-outline:hover:not(:disabled) {
+  background-color: var(--color-critical-bg);
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 0.775rem;
+}
+
+.btn-micro {
+  padding: 3px 8px;
+  font-size: 0.725rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-body);
+}
+.btn-micro:hover {
+  background-color: var(--bg-subtle);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  margin-bottom: 5px;
+}
+
+.form-select, .form-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--text-heading);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: var(--transition);
+}
+.form-select:focus, .form-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
+.input-with-action {
+  display: flex;
+  gap: 6px;
+}
+
+/* -------------------------------------------------------------
+   Layout & Cards
+   ------------------------------------------------------------- */
+.main-content {
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  flex: 1;
+}
+
+.card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Section Header Rows */
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: -0.01em;
+}
+
+.section-subtitle {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* -------------------------------------------------------------
+   1. Summary Cards (Top Row: 4 Cards)
+   ------------------------------------------------------------- */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.summary-card {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.summary-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-card-label {
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.summary-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+.blue-icon { background: #eff6ff; }
+.teal-icon { background: #f0fdfa; }
+.amber-icon { background: #fffbeb; }
+.gray-icon { background: #f1f5f9; }
+
+.summary-card-value {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  margin: 10px 0 4px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.summary-unit {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.summary-card-footer {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Disconnected Stale Notice Bar */
+.stale-notice-bar {
+  background-color: var(--bg-subtle);
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.825rem;
+  color: var(--text-body);
+}
+
+.stale-badge {
+  background-color: #64748b;
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.stale-notice-bar.hidden {
+  display: none;
+}
+
+/* -------------------------------------------------------------
+   2. Dual IV Bottle Cards (Left & Right)
+   ------------------------------------------------------------- */
+.bottle-cards-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+.bottle-card {
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  border-top: 4px solid var(--color-blue);
+}
+
+#bottle-card-1 {
+  border-top-color: #0284c7;
+}
+
+#bottle-card-2 {
+  border-top-color: #0d9488;
+}
+
+.bottle-card.low-fluid-alert {
+  border-top-color: var(--color-critical) !important;
+  background-color: #fffafb;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+.bottle-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.bottle-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.bottle-name {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.bottle-nominal-cap {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-normal {
+  background-color: var(--color-normal-bg);
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-low-fluid {
+  background-color: var(--color-critical-bg);
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  animation: pulse-red 1.2s infinite;
+}
+
+.badge-fault {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #f87171;
+}
+
+.badge-calib {
+  background-color: var(--color-warning-bg);
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.badge-disconnected {
+  background-color: var(--color-disconnected-bg);
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+@keyframes pulse-red {
+  0% { opacity: 0.85; }
+  50% { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 0.85; }
+}
+
+.bottle-warning-banner {
+  background-color: var(--color-critical-bg);
+  border-left: 4px solid var(--color-critical);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #991b1b;
+  margin-bottom: 16px;
+}
+
+.bottle-warning-banner.hidden {
+  display: none;
+}
+
+/* Bottle Body: 2 Columns (Visual Gauge + Metrics) */
+.bottle-card-body {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+/* Visual IV Graphic */
+.bottle-visual-col {
+  display: flex;
+  justify-content: center;
+}
+
+.iv-container-graphic {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 76px;
+}
+
+.iv-hanger-loop {
+  width: 22px;
+  height: 10px;
+  border: 2px solid #94a3b8;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  margin-bottom: -1px;
+}
+
+.iv-bottle-hull {
+  width: 74px;
+  height: 190px;
+  border: 2px solid #94a3b8;
+  border-radius: 12px 12px 18px 18px;
+  background-color: #f8fafc;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.iv-graduations {
+  position: absolute;
+  top: 6px;
+  right: 5px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.grad-mark {
+  font-size: 8px;
+  color: #64748b;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.iv-threshold-line {
+  position: absolute;
+  bottom: 8%; /* 20 mL is approx 4-8% of 500 mL */
+  left: 0;
+  right: 0;
+  border-bottom: 1.5px dashed var(--color-critical);
+  z-index: 6;
+  pointer-events: none;
+}
+
+.threshold-label {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  font-size: 7px;
+  font-weight: 700;
+  color: var(--color-critical);
+}
+
+.iv-fluid-fill {
+  width: 100%;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  transition: height 0.6s ease;
+  position: relative;
+}
+
+/* Bottle 2 distinct surgical teal fluid aesthetic */
+#bottle-card-2 .iv-fluid-fill {
+  background: linear-gradient(180deg, #2dd4bf 0%, #0d9488 100%);
+}
+
+#bottle-card-2 .progress-bar-fill {
+  background-color: var(--color-teal);
+}
+
+#bottle-card-2 .drip-drop {
+  background-color: var(--color-teal);
+}
+
+.iv-fluid-fill.fill-critical,
+#bottle-card-1 .iv-fluid-fill.fill-critical,
+#bottle-card-2 .iv-fluid-fill.fill-critical {
+  background: linear-gradient(180deg, #f87171 0%, #dc2626 100%) !important;
+}
+
+.iv-spout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -1px;
+}
+
+.drip-chamber {
+  width: 14px;
+  height: 24px;
+  border: 1.5px solid #94a3b8;
+  border-radius: 4px;
+  background-color: rgba(224, 242, 254, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.drip-drop {
+  width: 4px;
+  height: 6px;
+  background-color: #0284c7;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  position: absolute;
+  left: calc(50% - 2px);
+  top: 2px;
+  animation: drip 1.5s infinite;
+}
+
+.drip-drop.stopped {
+  animation: none;
+  opacity: 0.2;
+}
+
+@keyframes drip {
+  0% { transform: translateY(0); opacity: 0; }
+  30% { transform: translateY(2px); opacity: 1; }
+  90% { transform: translateY(16px); opacity: 1; }
+  100% { transform: translateY(18px); opacity: 0; }
+}
+
+/* Bottle Metrics Column */
+.bottle-metrics-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.remaining-metric {
+  background-color: var(--bg-subtle);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.metric-caption {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.large-volume-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 2px 0 6px;
+}
+
+.vol-number {
+  font-size: 2.3rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.vol-unit {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Progress Bar */
+.progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--color-blue);
+  border-radius: 9999px;
+  transition: width 0.5s ease, background-color 0.3s;
+}
+
+.progress-bar-fill.fill-warn {
+  background-color: var(--color-warning);
+}
+
+.progress-bar-fill.fill-critical {
+  background-color: var(--color-critical);
+}
+
+.progress-subtext {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.775rem;
+  color: var(--text-muted);
+}
+.progress-subtext strong {
+  color: var(--text-heading);
+}
+
+/* Sub-metrics Grid (4 items) */
+.metrics-subgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.submetric-item {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.submetric-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.submetric-val {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-top: 1px;
+}
+
+.status-val.ok { color: var(--color-normal); }
+.status-val.fault { color: var(--color-critical); }
+.valve-val.open { color: var(--color-normal); }
+.valve-val.closed { color: var(--color-critical); }
+
+/* Valve Status Box */
+.valve-status-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.valve-icon-state {
+  font-size: 1.1rem;
+}
+
+.valve-state-desc {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.valve-state-title {
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.valve-state-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.bottle-footer-time {
+  font-size: 0.7rem;
+  color: var(--text-light);
+  text-align: right;
+}
+
+/* -------------------------------------------------------------
+   3. Live Charts Section
+   ------------------------------------------------------------- */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.chart-card {
+  padding: 18px 20px;
+}
+
+.chart-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.chart-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.chart-badge {
+  font-size: 0.725rem;
+  font-weight: 600;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+
+.chart-container {
+  position: relative;
+  height: 240px;
+  width: 100%;
+}
+
+.chart-empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(248, 250, 252, 0.85);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.chart-empty-state.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chart-legend-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--text-body);
+}
+
+.chart-legend-tag .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.legend-b1 .dot { background-color: #0284c7; }
+.legend-b2 .dot { background-color: #0d9488; }
+
+/* -------------------------------------------------------------
+   4. Connection Configuration Cards (Option A & B)
+   ------------------------------------------------------------- */
+.connection-badges-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.server-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.775rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 5px 12px;
+  border-radius: 9999px;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+
+.server-status-pill.online {
+  background-color: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.server-status-pill.offline {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.active-mode-badge {
+  font-size: 0.825rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  color: var(--text-body);
+}
+.active-mode-badge strong {
+  color: var(--text-heading);
+}
+
+.connection-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.connection-card {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.conn-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.conn-opt-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  background-color: var(--color-blue-light);
+  color: #0369a1;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.05em;
+}
+
+.conn-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-top: 2px;
+}
+
+/* Quick Device Discovery Callout */
+.port-hint-box {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #166534;
+}
+
+.port-hint-box.hidden {
+  display: none !important;
+}
+
+.port-hint-box .hint-icon {
+  font-size: 1rem;
+}
+
+.port-hint-box .hint-text {
+  flex: 1;
+}
+
+.btn-xs-chip {
+  background-color: #16a34a;
+  color: #ffffff;
+  border: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-xs-chip:hover {
+  background-color: #15803d;
+}
+
+.form-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.form-label-row .form-label {
+  margin-bottom: 0;
+}
+
+.btn-link-action {
+  background: none;
+  border: none;
+  color: var(--color-blue);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.btn-link-action:hover {
+  color: #0369a1;
+}
+
+.conn-form-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 12px;
+}
+
+.conn-actions-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Web Serial Special Action Button */
+.btn-web-serial {
+  background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(13, 148, 136, 0.2);
+  transition: var(--transition);
+}
+
+.btn-web-serial:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 8px rgba(13, 148, 136, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-web-serial:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Server Offline Mini Notice */
+.server-offline-alert {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: 0.775rem;
+  color: #92400e;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.server-offline-alert code {
+  background-color: #fef3c7;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.server-offline-alert.hidden {
+  display: none !important;
+}
+
+/* Terminal Log for USB Serial */
+.terminal-box {
+  background-color: #0f172a;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.75rem;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  height: 140px;
+}
+
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.btn-terminal-clear {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.68rem;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.btn-terminal-clear:hover {
+  color: #cbd5e1;
+}
+
+.terminal-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  scrollbar-width: thin;
+}
+
+.terminal-line {
+  line-height: 1.35;
+  word-break: break-all;
+}
+
+.terminal-line.rx { color: #38bdf8; }
+.terminal-line.tx { color: #4ade80; }
+.terminal-line.err { color: #f87171; }
+.terminal-line.muted { color: #64748b; }
+
+/* Wi-Fi Info Panel */
+.wifi-info-panel {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.775rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.info-lbl {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.info-val {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.info-note {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+/* Simulation Test Box */
+.sim-toggle-box {
+  background-color: #f0fdf4;
+  border: 1px dashed #86efac;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
+
+.sim-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sim-title {
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+.sim-desc {
+  font-size: 0.725rem;
+  color: #15803d;
+  margin-top: 4px;
+}
+
+/* -------------------------------------------------------------
+   5. Event Log Section
+   ------------------------------------------------------------- */
+.event-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.filter-chip.active {
+  background-color: var(--color-blue);
+  border-color: var(--color-blue);
+  color: #ffffff;
+}
+
+.event-log-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.event-table-container {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.event-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.8rem;
+}
+
+.event-table th {
+  background-color: var(--bg-subtle);
+  color: var(--text-heading);
+  font-weight: 700;
+  font-size: 0.725rem;
+  letter-spacing: 0.04em;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.event-table td {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-body);
+}
+
+.event-table tr:last-child td {
+  border-bottom: none;
+}
+
+.event-table tr:hover {
+  background-color: #f8fafc;
+}
+
+.sev-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.sev-info { background: #e0f2fe; color: #0369a1; }
+.sev-warn { background: #fef3c7; color: #92400e; }
+.sev-error { background: #fee2e2; color: #b91c1c; }
+.sev-critical { background: #dc2626; color: #ffffff; }
+
+.empty-table-cell {
+  text-align: center;
+  padding: 24px !important;
+  color: var(--text-light);
+}
+
+/* -------------------------------------------------------------
+   Settings Modal
+   ------------------------------------------------------------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.modal-backdrop.hidden {
+  display: none !important;
+}
+
+.modal-dialog {
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  max-width: 580px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.btn-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-intro {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+}
+
+.settings-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.field-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 4px;
+}
+
+.sensor-tare-actions {
+  border-top: 1px solid var(--border-color);
+  padding-top: 14px;
+}
+
+.sub-heading {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 8px;
+}
+
+.tare-btn-group {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* -------------------------------------------------------------
+   Footer
+   ------------------------------------------------------------- */
+.app-footer {
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-surface);
+  padding: 20px 24px;
+  margin-top: auto;
+  text-align: center;
+}
+
+.footer-content p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.footer-content .disclaimer {
+  font-size: 0.725rem;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+/* -------------------------------------------------------------
+   Responsive Breakpoints
+   ------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .connection-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .bottle-cards-container {
+    grid-template-columns: 1fr; /* Stack vertically on mobile per requirements */
+  }
+
+  .bottle-card-body {
+    grid-template-columns: 1fr;
+  }
+
+  .bottle-visual-col {
+    margin-bottom: 12px;
+  }
+
+  .nav-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-telemetry-status {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =============================================================
+   CRITICAL EMERGENCY SCREEN RED INDICATION & SHUT-OFF STYLES
+   ============================================================= */
+
+/* Full Screen Alarm: Entire screen flashes medical alert red when fluid is stopped */
+body.emergency-screen-red {
+  background-color: #fee2e2 !important;
+  box-shadow: inset 0 0 0 10px #dc2626, inset 0 0 80px rgba(220, 38, 38, 0.35) !important;
+  animation: pulse-screen-red 1.8s infinite ease-in-out !important;
+  transition: background-color 0.3s ease;
+}
+
+@keyframes pulse-screen-red {
+  0% {
+    background-color: #fef2f2;
+    box-shadow: inset 0 0 0 8px #dc2626, inset 0 0 50px rgba(220, 38, 38, 0.25);
+  }
+  50% {
+    background-color: #fee2e2;
+    box-shadow: inset 0 0 0 12px #b91c1c, inset 0 0 100px rgba(220, 38, 38, 0.45);
+  }
+  100% {
+    background-color: #fef2f2;
+    box-shadow: inset 0 0 0 8px #dc2626, inset 0 0 50px rgba(220, 38, 38, 0.25);
+  }
+}
+
+body.emergency-screen-red .card {
+  border-color: #fca5a5 !important;
+}
+
+body.emergency-screen-red .app-navbar {
+  border-bottom: 2px solid #ef4444;
+  background-color: #fffafb;
+}
+
+/* -------------------------------------------------------------
+   Quick Fluid Shut-Off Threshold Control Bar
+   ------------------------------------------------------------- */
+.threshold-control-bar {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  border: 1.5px solid #bae6fd;
+  padding: 18px 24px;
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+}
+
+.threshold-bar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.threshold-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 380px;
+}
+
+.threshold-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #0369a1;
+  background-color: #e0f2fe;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.05em;
+  width: fit-content;
+}
+
+.threshold-heading-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.threshold-heading {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  letter-spacing: -0.01em;
+}
+
+.threshold-current-target {
+  font-size: 0.85rem;
+  color: #0284c7;
+}
+
+.threshold-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.threshold-controls-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.threshold-stepper-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-step {
+  width: 38px;
+  height: 38px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background-color: var(--bg-surface);
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  color: var(--text-heading);
+}
+.btn-step:hover {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.threshold-input-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-surface);
+  border: 2px solid #38bdf8;
+  border-radius: var(--radius-sm);
+  padding: 0 8px;
+}
+
+.threshold-number-input {
+  width: 64px;
+  height: 34px;
+  border: none;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  text-align: center;
+  outline: none;
+  background: transparent;
+}
+
+.threshold-unit-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.threshold-presets-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.presets-caption {
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.btn-preset-chip {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-body);
+  transition: var(--transition);
+}
+.btn-preset-chip:hover {
+  background-color: var(--bg-subtle);
+  border-color: #94a3b8;
+}
+.btn-preset-chip.active {
+  background-color: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+}
+
+/* Emergency & Action Buttons */
+.emergency-stop-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-success-open {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: 1px solid #047857;
+  padding: 10px 18px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.02em;
+}
+.btn-success-open:hover {
+  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.35);
+}
+
+.btn-danger-emergency {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: 1px solid #b91c1c;
+  padding: 10px 18px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.02em;
+}
+.btn-danger-emergency:hover {
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.35);
+}
+
+.valve-actions-btn-group {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-success-micro {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  font-weight: 700;
+}
+.btn-success-micro:hover {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+.btn-danger-micro {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  font-weight: 700;
+}
+.btn-danger-micro:hover {
+  background-color: #fecaca;
+  color: #991b1b;
+}
+
+.btn-secondary-micro {
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  font-weight: 700;
+}
+.btn-secondary-micro:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}

@@ -1,0 +1,27 @@
+{
+  "name": "smart-iv-monitor",
+  "version": "1.0.0",
+  "description": "Smart IV Fluid Monitoring System with Dual-Bottle Monitoring and Automatic Shut-Off",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "esp32",
+    "iv-monitoring",
+    "healthcare",
+    "hx711",
+    "serialport",
+    "websocket"
+  ],
+  "author": "Smart IV Monitor Engineering Team",
+  "license": "MIT",
+  "dependencies": {
+    "@serialport/parser-readline": "^13.0.0",
+    "chart.js": "^4.4.8",
+    "express": "^4.21.2",
+    "serialport": "^13.0.0",
+    "ws": "^8.18.0"
+  }
+}
