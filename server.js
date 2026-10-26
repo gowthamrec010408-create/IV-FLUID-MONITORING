@@ -58,7 +58,8 @@ const state = {
     chartHistoryLimit: 300,
     fluidDensity: 1.0, // g/mL for water
     bottle1Tare: 30.0, // empty container grams
-    bottle2Tare: 30.0
+    bottle2Tare: 30.0,
+    relayActiveLow: false
   },
   readings: {
     device: 'ESP32',
@@ -142,6 +143,10 @@ function handleIncomingReading(json) {
   state.lastUpdated = new Date().toISOString();
   state.isStale = false;
   state.status = 'CONNECTED';
+
+  if (json.relay_active_low !== undefined) {
+    state.settings.relayActiveLow = Boolean(json.relay_active_low);
+  }
 
   const prevB1Low = state.readings.bottle1.low_fluid;
   const prevB2Low = state.readings.bottle2.low_fluid;
@@ -773,8 +778,70 @@ app.post('/api/settings/update', async (req, res) => {
   if (bottle1Tare !== undefined) state.settings.bottle1Tare = Number(bottle1Tare);
   if (bottle2Tare !== undefined) state.settings.bottle2Tare = Number(bottle2Tare);
 
+  if (req.body.relayActiveLow !== undefined) {
+    state.settings.relayActiveLow = Boolean(req.body.relayActiveLow);
+    if (state.transport === 'SERIAL' && activeSerialPort && activeSerialPort.isOpen) {
+      const cmdStr = JSON.stringify({ cmd: 'RELAY_POLARITY', activeLow: state.settings.relayActiveLow }) + '\n';
+      activeSerialPort.write(cmdStr);
+      broadcast({ type: 'SERIAL_RAW', direction: 'TX', data: cmdStr.trim(), timestamp: new Date().toLocaleTimeString() });
+    } else if (state.transport === 'WIFI') {
+      fetch(`http://${state.settings.esp32Ip}:${state.settings.esp32Port}/api/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active_low: state.settings.relayActiveLow })
+      }).catch(() => {});
+    }
+  }
+
   broadcast({ type: 'SETTINGS_UPDATE', settings: state.settings });
   res.json({ success: true, settings: state.settings });
+});
+
+// 11b. Toggle / Configure Relay Polarity Directly
+app.post(['/api/relay/polarity', '/api/relay/toggle'], async (req, res) => {
+  let targetPolarity;
+  if (req.body && req.body.activeLow !== undefined) {
+    targetPolarity = Boolean(req.body.activeLow);
+  } else if (req.body && req.body.active_low !== undefined) {
+    targetPolarity = Boolean(req.body.active_low);
+  } else {
+    targetPolarity = !state.settings.relayActiveLow;
+  }
+
+  state.settings.relayActiveLow = targetPolarity;
+  logEvent('RELAY_POLARITY_CHANGED', `Relay polarity updated to ${targetPolarity ? 'ACTIVE-LOW (0V=ON)' : 'ACTIVE-HIGH (3.3V=ON)'}`, 'INFO');
+
+  if (state.transport === 'SERIAL' && activeSerialPort && activeSerialPort.isOpen) {
+    const cmdStr = JSON.stringify({ cmd: 'RELAY_POLARITY', activeLow: targetPolarity }) + '\n';
+    activeSerialPort.write(cmdStr);
+    broadcast({ type: 'SERIAL_RAW', direction: 'TX', data: cmdStr.trim(), timestamp: new Date().toLocaleTimeString() });
+  } else if (state.transport === 'WIFI') {
+    fetch(`http://${state.settings.esp32Ip}:${state.settings.esp32Port}/api/relay/polarity`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active_low: targetPolarity })
+    }).catch(() => {});
+  }
+
+  broadcast({ type: 'SETTINGS_UPDATE', settings: state.settings });
+  res.json({ success: true, relayActiveLow: state.settings.relayActiveLow });
+});
+
+// 11c. Relay Test Diagnostic
+app.post('/api/relay/test', async (req, res) => {
+  logEvent('RELAY_TEST', 'Diagnostic relay actuation test commanded', 'INFO');
+
+  if (state.transport === 'SERIAL' && activeSerialPort && activeSerialPort.isOpen) {
+    const cmdStr = JSON.stringify({ cmd: 'TEST_RELAY' }) + '\n';
+    activeSerialPort.write(cmdStr);
+    broadcast({ type: 'SERIAL_RAW', direction: 'TX', data: cmdStr.trim(), timestamp: new Date().toLocaleTimeString() });
+  } else if (state.transport === 'WIFI') {
+    fetch(`http://${state.settings.esp32Ip}:${state.settings.esp32Port}/api/relay/test`, {
+      method: 'GET'
+    }).catch(() => {});
+  }
+
+  res.json({ success: true, message: 'Relay test dispatched' });
 });
 
 // 12. Tare / Calibrate Load Cell command

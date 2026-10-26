@@ -154,6 +154,12 @@
           <button class="btn-danger-emergency" id="btn-emergency-stop-all" title="Immediately shut off both solenoid valves">
             🛑 Emergency Stop (Close Both)
           </button>
+          <button class="btn-amber-polarity" id="btn-toggle-polarity" title="Toggle between Active-HIGH (3.3V=ON) and Active-LOW (0V=ON) relay trigger mode">
+            🔄 Relay: <span id="polarity-btn-text">Active-HIGH</span>
+          </button>
+          <button class="btn-secondary-test" id="btn-test-relays" title="Run diagnostic relay actuation click test">
+            ⚡ Test Relay
+          </button>
         </div>
       </div>
     </section>
@@ -656,13 +662,23 @@
             <input type="number" id="setting-tare-b2" class="form-input" value="30.0" step="0.5">
             <small class="field-hint">Weight of empty plastic container + spike.</small>
           </div>
+
+          <div class="form-group">
+            <label for="setting-relay-polarity" class="form-label">Relay Trigger Logic (Polarity)</label>
+            <select id="setting-relay-polarity" class="form-select">
+              <option value="false" selected>Active-HIGH (3.3V = ON / Direct Transistor Trigger)</option>
+              <option value="true">Active-LOW (0V = ON / Optocoupler Ground Trigger)</option>
+            </select>
+            <small class="field-hint">If clicking CLOSE turns the relay ON, switch to Active-HIGH.</small>
+          </div>
         </div>
 
         <div class="sensor-tare-actions">
-          <span class="sub-heading">Hardware Zero/Tare Calibration</span>
+          <span class="sub-heading">Hardware Verification &amp; Tare Calibration</span>
           <div class="tare-btn-group">
             <button class="btn-secondary btn-sm" id="btn-tare-b1">Tare Bottle 1 Load Cell</button>
             <button class="btn-secondary btn-sm" id="btn-tare-b2">Tare Bottle 2 Load Cell</button>
+            <button class="btn-secondary btn-sm" id="btn-modal-test-relay">⚡ Test Relay Clicks</button>
           </div>
         </div>
       </div>

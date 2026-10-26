@@ -113,3 +113,28 @@ IN2                   --->   GPIO 19
 1. **Bottle Stands**: Mount each load cell horizontally using M4/M5 standoffs. Attach an acrylic platform or 3D-printed cup holder on top to securely seat a 500 mL IV bottle or saline bag.
 2. **Tubing Routing**: Connect silicone demonstration tubing from the base of Bottle 1 through Solenoid Valve 1 into a collection beaker. Repeat identically for Bottle 2 through Solenoid Valve 2.
 3. **Common Ground**: Ensure the external 12V power supply ground, 5V power supply ground, and ESP32 GND pin share a common ground plane.
+
+---
+
+## 6. Relay Polarity Troubleshooting & Diagnostic Guide
+
+### Why is the relay not turning on?
+
+If your relay does not click or turn on, check these common causes:
+
+1. **Relay Module Trigger Polarity (Active-LOW vs Active-HIGH)**:
+   - **Active-LOW** (Most standard 5V optocoupler relay boards): Pin = `LOW (0V)` turns relay ON.
+   - **Active-HIGH** (Transistor-driven or jumper-configured modules): Pin = `HIGH (3.3V)` turns relay ON.
+   - **How to fix / switch polarity**:
+     - **Web Dashboard**: Click the **🔄 Relay: Active-LOW / Active-HIGH** button on the top bar or in the Settings modal.
+     - **Arduino Serial Monitor**: Type `POLARITY` and press Enter to toggle between Active-LOW and Active-HIGH.
+     - **Hardware Jumper**: If your relay module has a small yellow jumper labeled `HIGH / LOW`, ensure it matches your chosen setting.
+
+2. **Relay VCC Voltage Supply**:
+   - The relay module `VCC` pin **must receive 5V** (from the ESP32 `VIN` pin when powered by USB, or from a 5V power supply). The ESP32 `3.3V` pin cannot output enough current to pull in a 5V mechanical relay coil.
+   - Ensure the ESP32 `GND` and Relay Module `GND` are connected together (Common Ground).
+
+3. **Valve Opening Logic & Bench Testing**:
+   - The firmware includes manual open override protection. When you click **▶ Open Valve** or **▶ Open Both Valves**, the valve stays open even if the bottle has no fluid on the bench.
+   - To test the relays without sensors, simply click **⚡ Test Relay** on the dashboard or type `TEST` in the Serial Monitor. The ESP32 will pulse Relay 1 for 1.5 seconds, then Relay 2 for 1.5 seconds.
+

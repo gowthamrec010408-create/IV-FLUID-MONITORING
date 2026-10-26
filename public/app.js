@@ -35,7 +35,8 @@
       chartHistoryLimit: 300,
       fluidDensity: 1.0,
       bottle1Tare: 30.0,
-      bottle2Tare: 30.0
+      bottle2Tare: 30.0,
+      relayActiveLow: false
     },
     readings: {
       bottle1: { weight_g: 0, fluid_g: 0, remaining_ml: 0, percentage: 0, valve_command: 'OPEN', sensor_ok: false, calibrated: true, low_fluid: false },
@@ -129,6 +130,9 @@
     presetChips: document.querySelectorAll('.btn-preset-chip'),
     btnOpenAll: document.getElementById('btn-open-all'),
     btnEmergencyStopAll: document.getElementById('btn-emergency-stop-all'),
+    btnTogglePolarity: document.getElementById('btn-toggle-polarity'),
+    polarityBtnText: document.getElementById('polarity-btn-text'),
+    btnTestRelays: document.getElementById('btn-test-relays'),
 
     // Audio Alarm
     btnToggleSound: document.getElementById('btn-toggle-sound'),
@@ -188,6 +192,8 @@
     settingCapB2: document.getElementById('setting-cap-b2'),
     settingTareB1: document.getElementById('setting-tare-b1'),
     settingTareB2: document.getElementById('setting-tare-b2'),
+    settingRelayPolarity: document.getElementById('setting-relay-polarity'),
+    btnModalTestRelay: document.getElementById('btn-modal-test-relay'),
     btnTareB1: document.getElementById('btn-tare-b1'),
     btnTareB2: document.getElementById('btn-tare-b2')
   };
@@ -1066,6 +1072,11 @@
       };
     }
 
+    if (json.relay_active_low !== undefined) {
+      appState.settings.relayActiveLow = Boolean(json.relay_active_low);
+      updatePolarityUI();
+    }
+
     renderTelemetry();
     updateConnectionUI();
 
@@ -1414,32 +1425,37 @@
 
   // Save Settings
   async function saveSettings() {
+    const isRelayLow = dom.settingRelayPolarity ? (dom.settingRelayPolarity.value === 'true') : appState.settings.relayActiveLow;
     const payload = {
       lowFluidThreshold: Number(dom.settingThreshold.value),
       fluidDensity: Number(dom.settingDensity.value),
       bottle1Capacity: Number(dom.settingCapB1.value),
       bottle2Capacity: Number(dom.settingCapB2.value),
       bottle1Tare: Number(dom.settingTareB1.value),
-      bottle2Tare: Number(dom.settingTareB2.value)
+      bottle2Tare: Number(dom.settingTareB2.value),
+      relayActiveLow: isRelayLow
     };
 
     if (webSerial.port) {
       appState.settings = { ...appState.settings, ...payload };
       await sendWebSerialCommand({ cmd: 'SET_THRESHOLD', threshold: payload.lowFluidThreshold });
+      await sendWebSerialCommand({ cmd: 'RELAY_POLARITY', activeLow: isRelayLow });
+      updatePolarityUI();
       dom.settingsModal.classList.add('hidden');
       renderTelemetry();
-      alert('Settings saved and threshold transmitted directly to ESP32 via Web Serial.');
+      alert('Settings saved and transmitted directly to ESP32 via Web Serial.');
       return;
     } else if (directWifiActive) {
       appState.settings = { ...appState.settings, ...payload };
       fetch(`http://${appState.settings.esp32Ip}:${appState.settings.esp32Port}/api/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ low_fluid_threshold: payload.lowFluidThreshold })
+        body: JSON.stringify({ low_fluid_threshold: payload.lowFluidThreshold, active_low: isRelayLow })
       }).catch(() => {});
+      updatePolarityUI();
       dom.settingsModal.classList.add('hidden');
       renderTelemetry();
-      alert('Settings saved and threshold transmitted directly to ESP32 via Wi-Fi.');
+      alert('Settings saved and transmitted directly to ESP32 via Wi-Fi.');
       return;
     }
 
@@ -1570,6 +1586,67 @@
     dom.settingCapB2.value = appState.settings.bottle2Capacity || 500;
     dom.settingTareB1.value = appState.settings.bottle1Tare || 30.0;
     dom.settingTareB2.value = appState.settings.bottle2Tare || 30.0;
+    updatePolarityUI();
+  }
+
+  function updatePolarityUI() {
+    const isLow = appState.settings.relayActiveLow !== false;
+    if (dom.polarityBtnText) {
+      dom.polarityBtnText.textContent = isLow ? 'Active-LOW (0V=ON)' : 'Active-HIGH (3.3V=ON)';
+    }
+    if (dom.settingRelayPolarity) {
+      dom.settingRelayPolarity.value = isLow ? 'true' : 'false';
+    }
+  }
+
+  // Toggle Relay Polarity between Active-LOW and Active-HIGH
+  async function toggleRelayPolarity(forcedVal) {
+    const nextVal = (typeof forcedVal === 'boolean') ? forcedVal : !appState.settings.relayActiveLow;
+    appState.settings.relayActiveLow = nextVal;
+    updatePolarityUI();
+
+    if (webSerial.port) {
+      await sendWebSerialCommand({ cmd: 'RELAY_POLARITY', activeLow: nextVal });
+      appendSerialTerminalLine('TX', `Relay polarity updated to ${nextVal ? 'Active-LOW (0V=ON)' : 'Active-HIGH (3.3V=ON)'}`, new Date().toLocaleTimeString());
+      return;
+    } else if (directWifiActive) {
+      fetch(`http://${appState.settings.esp32Ip}:${appState.settings.esp32Port}/api/relay/polarity`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active_low: nextVal })
+      }).catch(() => {});
+      return;
+    }
+
+    try {
+      await fetch(`${API_BASE}/api/relay/polarity`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activeLow: nextVal })
+      });
+    } catch (e) {
+      console.warn('Failed to send polarity toggle:', e);
+    }
+  }
+
+  // Diagnostic Relay Click Test
+  async function testRelayDiagnostic() {
+    appendSerialTerminalLine('TX', '[Relay Test] Running 3-second diagnostic test...', new Date().toLocaleTimeString());
+    alert('Testing relay channels on ESP32 (GPIO 18 & 19). You should hear audible clicks or see LEDs light on the relay module.');
+
+    if (webSerial.port) {
+      await sendWebSerialCommand({ cmd: 'TEST_RELAY' });
+      return;
+    } else if (directWifiActive) {
+      fetch(`http://${appState.settings.esp32Ip}:${appState.settings.esp32Port}/api/relay/test`, { method: 'GET' }).catch(() => {});
+      return;
+    }
+
+    try {
+      await fetch(`${API_BASE}/api/relay/test`, { method: 'POST' });
+    } catch (e) {
+      console.warn('Failed to send relay test:', e);
+    }
   }
 
   // Toggle Simulation Mode (For college demonstrations without physical hardware)
@@ -1632,6 +1709,9 @@
     // Emergency & Quick Open / Stop Buttons
     if (dom.btnOpenAll) dom.btnOpenAll.addEventListener('click', () => openValve('all'));
     if (dom.btnEmergencyStopAll) dom.btnEmergencyStopAll.addEventListener('click', () => closeValve('all'));
+    if (dom.btnTogglePolarity) dom.btnTogglePolarity.addEventListener('click', () => toggleRelayPolarity());
+    if (dom.btnTestRelays) dom.btnTestRelays.addEventListener('click', testRelayDiagnostic);
+    if (dom.btnModalTestRelay) dom.btnModalTestRelay.addEventListener('click', testRelayDiagnostic);
 
     // Bottle Stop Flow Buttons
     if (dom.btnStopB1) dom.btnStopB1.addEventListener('click', () => closeValve(1));
